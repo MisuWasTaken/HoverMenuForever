@@ -8,8 +8,6 @@ local defaults = {
 
 local db, settingsCategory, backpackButton
 local initialized, scanTimer, visibilityTimer = false, 0, 0
--- Mouseover is checked at 30 Hz instead of every frame.
--- This keeps a 0.3-second fade smooth while reducing CPU usage.
 local VISIBILITY_INTERVAL = 1 / 30
 local SCAN_INTERVAL = 2
 local sexyMapLoaded, CheckSexyMap = false, nil
@@ -75,11 +73,8 @@ local function ScanFrames()
             end
         end
 
-        -- If a dedicated bag bar is unavailable, its buttons are handled
-        -- individually without hiding the action bar.
     end
 
-    -- Questie replaces Blizzard's objective tracker, so it takes priority if loaded later.
     if _G.Questie_BaseFrame then groups.quests.frame = _G.Questie_BaseFrame end
     ScanBagSlots()
 end
@@ -87,8 +82,6 @@ end
 local function IsInFrame(frame)
     if not frame or not frame.IsShown or not frame:IsShown() then return false end
 
-    -- Geometric hit testing also works when Questie disables mouse input
-    -- for its locked objective tracker.
     if GetCursorPosition and frame.GetLeft and frame.GetEffectiveScale then
         local ok, inside = pcall(function()
             local left, right, bottom, top = frame:GetLeft(), frame:GetRight(), frame:GetBottom(), frame:GetTop()
@@ -117,8 +110,6 @@ local function IsDescendantOf(frame, ancestor)
     return false
 end
 
--- SexyMap may reparent Minimap outside MinimapCluster.
--- Track both frames without changing SexyMap's anchors or parents.
 CheckSexyMap = function()
     if C_AddOns and C_AddOns.IsAddOnLoaded then
         local ok, loaded = pcall(C_AddOns.IsAddOnLoaded, "SexyMap")
@@ -131,14 +122,12 @@ CheckSexyMap = function()
     return false
 end
 
--- Keep the last minimap bounds so mouseover works even after it is hidden.
 local function CursorInMinimap(frame, margin)
     if not frame or not GetCursorPosition then return false end
     local ok, left, right, bottom, top, scale = pcall(function()
         return frame:GetLeft(), frame:GetRight(), frame:GetBottom(), frame:GetTop(), frame:GetEffectiveScale()
     end)
     if ok and left and right and bottom and top and scale and scale > 0 then
-        -- Reuse the cached table to avoid allocations on every check.
         if not cachedMinimapBounds then cachedMinimapBounds = {} end
         local b = cachedMinimapBounds
         b[1], b[2], b[3], b[4], b[5] = left, right, bottom, top, scale
@@ -158,9 +147,6 @@ local function MouseInMinimap()
     return false
 end
 
--- On Forever, SetAlpha(0) may leave minimap decorations visible.
--- Hide the entire frame at the end of the fade, including SexyMap effects.
--- Only show frames that this addon previously hid.
 local function ApplyMinimapFrame(frame, alpha, hideAtZero)
     if not frame then return end
 
@@ -181,7 +167,6 @@ local function FadeMinimap(alpha)
     local minimap, cluster, backdrop = _G.Minimap, _G.MinimapCluster, _G.MinimapBackdrop
     local hideAtZero = db and db.hideMinimap and alpha <= 0.001 and not ((SettingsPanel and SettingsPanel:IsShown()) or (EditModeManagerFrame and EditModeManagerFrame:IsShown()))
 
-    -- Restore the container before its child elements.
     ApplyMinimapFrame(cluster, alpha, hideAtZero)
     if minimap and minimap ~= cluster then
         local inherited = cluster and IsDescendantOf(minimap, cluster)
@@ -237,22 +222,18 @@ local function UpdateVisibility(delta)
     local manager = _G.MainMenuBarBagManager
     local bagsAlpha = groups.bags.alpha
 
-    -- All bag buttons fade together; none stay permanently visible.
-    -- Some UI layouts use separate bag manager and bag bar frames.
     local fadeBags, fadeManager = bags ~= nil, manager ~= nil and manager ~= bags
     if fadeBags and fadeManager then
         if IsDescendantOf(bags, manager) then
-            fadeBags = false -- the manager already controls BagsBar
+            fadeBags = false
         elseif IsDescendantOf(manager, bags) then
-            fadeManager = false -- BagsBar already controls the manager
+            fadeManager = false
         end
     end
 
     if bags then SetAlphaSafe(bags, fadeBags and bagsAlpha or 1) end
     if manager and manager ~= bags then SetAlphaSafe(manager, fadeManager and bagsAlpha or 1) end
 
-    -- Child buttons inherit their parent bar's fade.
-    -- Avoid allocating a new function on each update.
     if backpackButton then
         local inside = (fadeBags and IsDescendantOf(backpackButton, bags))
             or ((fadeManager or manager == bags) and IsDescendantOf(backpackButton, manager))
@@ -370,7 +351,6 @@ events:SetScript("OnEvent", function(self, event, name)
             db[key] = math.max(0, math.min(15, tonumber(db[key]) or defaults[key]))
         end
         db.fadeDuration = math.max(0, math.min(1.5, tonumber(db.fadeDuration) or defaults.fadeDuration))
-        -- Removed legacy bag options: the entire bar now uses mouseover.
         db.keepBackpack = nil
         db.showBagSlots = nil
         db.showFreeSlots = nil
