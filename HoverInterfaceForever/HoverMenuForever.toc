@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: HoverMenu Forever
 ## Notes: Mouseover fade for menus, bags, quests and minimap, with independent hide delays. Supports Questie and SexyMap.
-## Author: Misu
+## Author: MisuWasTaken
 ## Version: 0.5.2
 ## IconTexture: Interface\Icons\Spell_Nature_HealingTouch
 ## SavedVariables: HoverMenuForeverDB

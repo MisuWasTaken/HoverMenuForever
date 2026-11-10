@@ -34,4 +34,11 @@ This addon has **no required dependencies**; Questie and SexyMap support is opti
 
 ## Known limitations
 
-UI mods may change or replace frames. If an element does not hide correctly, use `/hmf debug` and share the chat output in a GitHub issue.
+Some UI addons may modify or replace Blizzard's default interface elements, which could cause compatibility issues with HoverMenu Forever.
+
+If something isn't hiding correctly, use /hmf debug and include the chat output when reporting the issue.
+
+## Support & Feedback
+
+If you find a bug or have a suggestion, feel free to open a issue on Github.
+You can also reach me on my discord: misuzu01
